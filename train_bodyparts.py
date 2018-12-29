@@ -167,7 +167,7 @@ def generate_data(image_generator, mask_generator, n, num_classes):
 
 
 def segmentation_train(img_wh, img_dec_wh, dataset):
-    batch_size = 1  # TODO change back to 10
+    batch_size = 10  # TODO change back to 10
 
     if dataset == 'up-s31':
         train_image_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/up-s31/s31/images"
@@ -177,14 +177,14 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
         num_train_images = 8515
 
     elif dataset == 'ppp':
-        train_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/trial_train_images'
-        train_label_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/trial_train_masks'
-        val_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/trial_val_images'
-        val_label_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/trial_val_masks'
+        train_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/train_images'
+        train_label_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/train_masks'
+        val_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/val_images'
+        val_label_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/val_masks'
         num_classes = 7
-        # num_train_images = 3534
-        num_train_images = 1
-        num_val_images = 1
+        num_train_images = 3034
+        # num_train_images = 1
+        num_val_images = 500
 
     assert os.path.isdir(train_image_dir), 'Invalid image directory'
     assert os.path.isdir(train_label_dir), 'Invalid label directory'
@@ -210,8 +210,6 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
         horizontal_flip=True,
         fill_mode='nearest')
 
-    # TODO WRITE VALIDATION GENERATORS THEN MAKE NEW generator function LIKE train_data_gen that
-    # returns validation data, pass this to fit_generator method.
     val_image_data_gen_args = dict(
         rescale=(1/255.0),
         fill_mode='nearest')
@@ -360,5 +358,5 @@ def segmentation_test(img_wh, img_dec_wh, num_classes, save=False):
 
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-# segmentation_train(256, 256, 'ppp')
-segmentation_test(256, 256, 7, save=False)
+segmentation_train(256, 256, 'ppp')
+# segmentation_test(256, 256, 7, save=False)
