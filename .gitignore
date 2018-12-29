@@ -1,0 +1,11 @@
+*.jpg
+*.png
+*.xml
+
+__pycache__/
+
+overfit_tests/
+images-ex04/
+ppp_body_part_models/
+simple_segment_models/
+up-s31_body_part_models/
