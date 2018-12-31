@@ -67,7 +67,9 @@ def segmentation_test(img_wh, img_dec_wh, num_classes, save=False):
     # test_image_dir = 'images-ex04/my_vid1'
     test_image_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/trial_val_images/val"
     print('Preloaded model')
-    autoencoder = load_model('./overfit_tests/ppp_test_weight_2008_0101.hdf5')
+    autoencoder = load_model('./overfit_tests/ppp_test_weight_64_no_augment_2008_0601.hdf5')
     test(autoencoder, img_wh, img_dec_wh, test_image_dir, num_classes, save=save)
+
+segmentation_test(256, 64, 7, save=False)
 
 

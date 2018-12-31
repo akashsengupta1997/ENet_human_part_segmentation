@@ -20,13 +20,6 @@ from encoder_enet_simple import build_enet, build_enet_64
 from decoder_enet_simple import build_enet_dec, build_enet_dec_64
 
 np.set_printoptions(threshold=np.nan)
-np.random.seed(123)  # for reproducibility
-
-DETECT_TIMES = []
-
-# UP-S31 Dataset information
-NUM_BODYPARTS = 31
-NUM_IMAGES = 8515
 
 
 def labels_from_seg_image(seg_image_batch):
@@ -81,68 +74,6 @@ def classlab(labels, num_classes):
     return x
 
 
-def test(train_data, model, img_wh, img_dec_wh, image_dir, num_classes, save=False):
-    img_list = []
-    if not (train_data is None):
-        for id in range(0, 10):
-            # plt.imshow((train_data[0][id,:,:,:]).astype(np.uint8))
-            # plt.show()
-            img_list.append(train_data[0][id, :, :, :])
-    # plt.imshow((img_list[id]).astype(np.uint8))
-    # plt.show()
-
-    fnames = []
-    for fname in sorted(os.listdir(image_dir)):
-        if fname.endswith(".png") or fname.endswith(".jpg"):
-            print(fname)
-            image = cv2.imread(os.path.join(image_dir, fname))
-            image = cv2.resize(image, (img_wh, img_wh))
-            image = image[..., ::-1]
-            # plt.imshow(image)
-            # plt.show()
-            img_list.append(image / 255.0)
-            fnames.append(fname)
-
-    img_tensor = np.array(img_list)
-    output = np.reshape(model.predict(img_tensor), (len(img_list), img_dec_wh, img_dec_wh,
-                                                    num_classes))
-    print("orig output shape", output.shape)
-    for img_num in range(len(img_list)):
-        seg_labels = output[img_num, :, :, :]
-        seg_img = np.argmax(seg_labels, axis=2)
-        print("labels output shape", seg_labels.shape)
-        print("seg img output shape", seg_img.shape)
-        print(np.unique(seg_img))
-        if not save:
-            plt.figure(1)
-            plt.clf()
-            plt.subplot(331)
-            plt.imshow(seg_labels[:, :, 0], cmap="gray")
-            plt.subplot(332)
-            plt.imshow(seg_labels[:, :, 1], cmap="gray")
-            plt.subplot(333)
-            plt.imshow(seg_labels[:, :, 2], cmap="gray")
-            plt.subplot(334)
-            plt.imshow(seg_labels[:, :, 3], cmap="gray")
-            plt.subplot(335)
-            plt.imshow(seg_labels[:, :, 4], cmap="gray")
-            plt.subplot(336)
-            plt.imshow(seg_labels[:, :, 5], cmap="gray")
-            plt.subplot(337)
-            plt.imshow(seg_labels[:, :, 6], cmap="gray")
-            plt.figure(2)
-            plt.clf()
-            plt.imshow(seg_img)
-            plt.figure(3)
-            plt.clf()
-            plt.imshow(img_list[img_num])
-            plt.show()
-        else:
-            save_path = os.path.join(image_dir, "results", os.path.splitext(fnames[img_num])[0]
-                                     + "_seg_img.png")
-            plt.imsave(save_path, seg_img*8)
-
-
 def generate_data(image_generator, mask_generator, n, num_classes):
     images = []
     labels = []
@@ -165,6 +96,22 @@ def generate_data(image_generator, mask_generator, n, num_classes):
     #       'labels shape in generate data', np.array(labels).shape)
     return np.array(images), np.array(labels)
 
+def build_autoencoder(img_wh, img_dec_wh, num_classes):
+    inp = Input(shape=(img_wh, img_wh, 3))
+
+    if img_dec_wh == 256:
+        enet = build_enet(inp)
+        enet = build_enet_dec(enet, nc=num_classes)
+    elif img_dec_wh == 64:
+        enet = build_enet_64(inp)
+        enet = build_enet_dec_64(enet, nc=num_classes)
+
+    enet = Reshape((img_dec_wh * img_dec_wh, num_classes))(enet)
+    enet = Activation('softmax')(
+        enet)  # softmax is computed for the last dimension - i.e. over classes, as desired
+    autoencoder = Model(inputs=inp, outputs=enet)
+
+    return autoencoder
 
 def segmentation_train(img_wh, img_dec_wh, dataset):
     batch_size = 10  # TODO change back to 10
@@ -192,21 +139,21 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
     assert os.path.isdir(val_label_dir), 'Invalid validation label directory'
 
     train_image_data_gen_args = dict(
-        rotation_range=40,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        shear_range=0.2,
-        zoom_range=0.2,
+        rotation_range=10,
+        width_shift_range=0.1,
+        height_shift_range=0.1,
+        shear_range=0.1,
+        zoom_range=0.1,
         horizontal_flip=True,
         rescale=1/255.0,
         fill_mode='nearest')
 
     train_mask_data_gen_args = dict(
-        rotation_range=40,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        shear_range=0.2,
-        zoom_range=0.2,
+        rotation_range=10,
+        width_shift_range=0.1,
+        height_shift_range=0.1,
+        shear_range=0.1,
+        zoom_range=0.1,
         horizontal_flip=True,
         fill_mode='nearest')
 
@@ -236,13 +183,15 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
         batch_size=batch_size,
         target_size=(img_dec_wh, img_dec_wh),
         class_mode=None,
-        color_mode="grayscale")
+        color_mode="grayscale",
+        seed=seed)
 
     val_image_generator = val_image_datagen.flow_from_directory(
         val_image_dir,
         batch_size=batch_size,
         target_size=(img_wh, img_wh),
-        class_mode=None)
+        class_mode=None,
+        seed=seed)
 
     val_mask_generator = val_mask_datagen.flow_from_directory(
         val_label_dir,
@@ -254,30 +203,37 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
 
     print('Generators loaded.')
 
-    # # For testing data loading
-    # x = train_image_generator.next()
-    # y = train_mask_generator.next()
-    # plt.figure(1)
-    # plt.subplot(211)
-    # plt.imshow(x[0, :, :, :])
-    # plt.subplot(212)
-    # plt.imshow(y[0, :, :, 0])
-    # plt.show()
-    # print('x shape in generate data', x.shape)  # should = (batch_size, img_hw, img_hw, 3)
-    # print('y shape in generate data', y.shape)  # should = (batch_size, dec_hw, dec_hw, 1)
-    # classlab(y[0, :, :, :], num_classes)
-    # classlab(y[1, :, :, :], num_classes)
+    # For testing data loading
+    x = train_image_generator.next()
+    y = train_mask_generator.next()
+    print('x shape in generate data', x.shape)  # should = (batch_size, img_hw, img_hw, 3)
+    print('y shape in generate data', y.shape)  # should = (batch_size, dec_hw, dec_hw, 1)
+    plt.figure(1)
+    plt.subplot(221)
+    plt.imshow(x[0, :, :, :])
+    plt.subplot(222)
+    plt.imshow(y[0, :, :, 0])
+    y_post = labels_from_seg_image(y)
+    plt.subplot(223)
+    plt.imshow(y_post[0, :, :, 0])
+    plt.figure(2)
+    plt.subplot(221)
+    plt.imshow(x[1, :, :, :])
+    plt.subplot(222)
+    plt.imshow(y[1, :, :, 0])
+    plt.subplot(223)
+    plt.imshow(y_post[1, :, :, 0])
+    plt.figure(3)
+    plt.subplot(221)
+    plt.imshow(x[2, :, :, :])
+    plt.subplot(222)
+    plt.imshow(y[2, :, :, 0])
+    plt.subplot(223)
+    plt.imshow(y_post[2, :, :, 0])
+    plt.show()
 
-    # Build Model # TODO write a function for this
-    inp = Input(shape=(img_wh, img_wh, 3))
-    enet = build_enet(inp)
-    enet = build_enet_dec(enet, nc=num_classes)
-    enet = Reshape((img_dec_wh * img_dec_wh, num_classes))(enet)
-    enet = Activation('softmax')(enet)  # softmax is computed for the last dimension - i.e. over classes, as desired
-    autoencoder = Model(inputs=inp, outputs=enet)
-    optimizer = SGD(lr=0.1, momentum=0.9, decay=1e-6, nesterov=False)  # TODO check learning rate
-
-    autoencoder.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    autoencoder = build_autoencoder(img_wh, img_dec_wh, num_classes)
+    autoencoder.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
 
     print("Model compiled.")
 
@@ -334,27 +290,17 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
         history = autoencoder.fit_generator(train_data_gen(),
                                             steps_per_epoch=int(num_train_images/batch_size),
                                             nb_epoch=nb_epoch,
-                                            verbose=1,
-                                            validation_data=val_data_gen(),
-                                            validation_steps=int(num_val_images)/batch_size)
+                                            verbose=1)
+                                            # validation_data=val_data_gen(),
+                                            # validation_steps=int(num_val_images)/batch_size)
 
         print("After fitting")
         if trials % 200 == 0:
-            autoencoder.save('overfit_tests/ppp_test_weight'
+            autoencoder.save('overfit_tests/ppp_test_weight_64_weighted_classes_2008_'
                              + str(nb_epoch * (trials + 1)).zfill(4) + '.hdf5')
 
     print("Finished")
 
 
-def segmentation_test(img_wh, img_dec_wh, num_classes, save=False):
-    # test_image_dir = 'images-ex04/multiperson_bodyparts_tests'
-    # test_image_dir = 'images-ex04/my_vid1'
-    test_image_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/trial_train_images/train"
-    print('Preloaded model')
-    autoencoder = load_model('./overfit_tests/ppp_test_weight3801.hdf5')
-    test(None, autoencoder, img_wh, img_dec_wh, test_image_dir, num_classes, save=save)
-
-
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-segmentation_train(256, 256, 'ppp')
-# segmentation_test(256, 256, 7, save=False)
+segmentation_train(256, 64, 'ppp')
