@@ -301,4 +301,5 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
 
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-segmentation_train(256, 64, 'ppp+up-s31')
+if __name__ == 'main':
+    segmentation_train(256, 64, 'ppp+up-s31')
