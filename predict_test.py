@@ -31,7 +31,6 @@ def test(model, img_wh, img_dec_wh, image_dir, num_classes, save=False):
         seg_img = np.argmax(seg_labels, axis=2)
         print("labels output shape", seg_labels.shape)
         print("seg img output shape", seg_img.shape)
-        print(np.unique(seg_img))
         if not save:
             plt.figure(1)
             plt.clf()
@@ -63,11 +62,9 @@ def test(model, img_wh, img_dec_wh, image_dir, num_classes, save=False):
 
 
 def segmentation_test(img_wh, img_dec_wh, num_classes, save=False):
-    # test_image_dir = 'images-ex04/multiperson_bodyparts_tests'
-    # test_image_dir = 'images-ex04/my_vid1'
-    test_image_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/trial_val_images/val"
+    test_image_dir = 'test_images'
     print('Preloaded model')
-    autoencoder = load_model('./overfit_tests/ppp_test_weight_64_no_augment_2008_0601.hdf5')
+    autoencoder = load_model('./ppp_body_part_models/enet64_weight0401.hdf5')
     test(autoencoder, img_wh, img_dec_wh, test_image_dir, num_classes, save=save)
 
 segmentation_test(256, 64, 7, save=False)

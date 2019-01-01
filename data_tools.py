@@ -5,6 +5,7 @@ Currently only has functions for the Pascal Person Part dataset.
 
 import os
 import shutil
+import cv2
 
 from matplotlib import pyplot as plt
 
@@ -65,16 +66,76 @@ def labels_from_seg_image(seg_image):
 
 
 def convert_ppp_labels(source_folder, destination_folder):
-
     for fname in sorted(os.listdir(source_folder)):
         if fname.endswith(".png"):
-            orig_mask = plt.imread(os.path.join(source_folder, fname))
+            orig_mask = cv2.imread(os.path.join(source_folder, fname), 0)
             new_mask = labels_from_seg_image(orig_mask)
-            plt.imsave(os.path.join(destination_folder, fname), new_mask)
+            # plt.figure(1)
+            # plt.subplot(211)
+            # plt.imshow(orig_mask)
+            # plt.subplot(212)
+            # plt.imshow(new_mask)
+            # plt.show()
+            cv2.imwrite(os.path.join(destination_folder, fname), new_mask)
 
 
-convert_ppp_labels('/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/'
-                   'pascal_person_part/train_masks/train',
-                   '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/ppp+up-s31/'
-                   'train_masks/train')
+def merge_ups31_labels(source_folder, destination_folder):
+    for fname in sorted(os.listdir(source_folder)):
+        if fname.endswith(".png"):
+            orig_mask = cv2.imread(os.path.join(source_folder, fname), 0)
+            new_mask = orig_mask.copy()
 
+            new_mask[orig_mask == 11] = 1
+            new_mask[orig_mask == 12] = 1
+            new_mask[orig_mask == 13] = 1
+            new_mask[orig_mask == 24] = 1
+            new_mask[orig_mask == 25] = 1
+            new_mask[orig_mask == 26] = 1
+
+            new_mask[orig_mask == 9] = 2
+            new_mask[orig_mask == 10] = 2
+            new_mask[orig_mask == 22] = 2
+            new_mask[orig_mask == 23] = 2
+
+            new_mask[orig_mask == 1] = 3
+            new_mask[orig_mask == 2] = 3
+            new_mask[orig_mask == 3] = 3
+            new_mask[orig_mask == 14] = 3
+            new_mask[orig_mask == 15] = 3
+            new_mask[orig_mask == 16] = 3
+
+            new_mask[orig_mask == 4] = 4
+            new_mask[orig_mask == 5] = 4
+            new_mask[orig_mask == 6] = 4
+            new_mask[orig_mask == 17] = 4
+            new_mask[orig_mask == 18] = 4
+            new_mask[orig_mask == 19] = 4
+
+            new_mask[orig_mask == 7] = 5
+            new_mask[orig_mask == 8] = 5
+            new_mask[orig_mask == 20] = 5
+            new_mask[orig_mask == 21] = 5
+            new_mask[orig_mask == 31] = 5
+
+            new_mask[orig_mask == 27] = 6
+            new_mask[orig_mask == 28] = 6
+            new_mask[orig_mask == 29] = 6
+            new_mask[orig_mask == 30] = 6
+
+            # plt.figure(1)
+            # plt.clf()
+            # plt.subplot(211)
+            # plt.imshow(orig_mask)
+            # plt.subplot(212)
+            # plt.imshow(new_mask)
+            # plt.show()
+            cv2.imwrite(os.path.join(destination_folder, fname), new_mask)
+
+# convert_ppp_labels('/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/'
+#                    'pascal_person_part/val_masks/val',
+#                    '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/ppp+up-s31/'
+#                    'val_masks/val')
+
+merge_ups31_labels('/Users/Akash_Sengupta/Documents/4th_year_project_datasets/up-s31/s31/masks/'
+                   'train',
+                   '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/ppp+up-s31/train_masks/temp')

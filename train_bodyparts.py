@@ -74,14 +74,14 @@ def classlab(labels, num_classes):
     return x
 
 
-def generate_data(image_generator, mask_generator, n, num_classes):
+def generate_data(image_generator, mask_generator, n, num_classes, dataset):
     images = []
     labels = []
     i = 0
     while i < n:
         x = image_generator.next()
         y = mask_generator.next()
-        if num_classes == 7:  # Need to change labels if using ppp dataset
+        if dataset == 'ppp':  # Need to change labels if using ppp dataset
             y = labels_from_seg_image(y)
         j = 0
         while j < x.shape[0]:
@@ -95,6 +95,7 @@ def generate_data(image_generator, mask_generator, n, num_classes):
     # print('images shape in generate data', np.array(images).shape,
     #       'labels shape in generate data', np.array(labels).shape)
     return np.array(images), np.array(labels)
+
 
 def build_autoencoder(img_wh, img_dec_wh, num_classes):
     inp = Input(shape=(img_wh, img_wh, 3))
@@ -113,8 +114,9 @@ def build_autoencoder(img_wh, img_dec_wh, num_classes):
 
     return autoencoder
 
+
 def segmentation_train(img_wh, img_dec_wh, dataset):
-    batch_size = 10  # TODO change back to 10
+    batch_size = 1  # TODO change back to 10
 
     if dataset == 'up-s31':
         train_image_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/up-s31/s31/images"
@@ -126,12 +128,22 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
     elif dataset == 'ppp':
         train_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/train_images'
         train_label_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/train_masks'
+
         val_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/val_images'
         val_label_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/val_masks'
         num_classes = 7
         num_train_images = 3034
-        # num_train_images = 1
         num_val_images = 500
+
+    elif dataset == 'ppp+up-s31':
+        train_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/ppp+up-s31/train_images'
+        train_label_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/ppp+up-s31/train_masks'
+
+        val_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/ppp+up-s31/val_images'
+        val_label_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/ppp+up-s31/val_masks'
+        num_classes = 7
+        num_train_images = 7034
+        num_val_images = 1001
 
     assert os.path.isdir(train_image_dir), 'Invalid image directory'
     assert os.path.isdir(train_label_dir), 'Invalid label directory'
@@ -139,21 +151,21 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
     assert os.path.isdir(val_label_dir), 'Invalid validation label directory'
 
     train_image_data_gen_args = dict(
-        rotation_range=10,
-        width_shift_range=0.1,
-        height_shift_range=0.1,
-        shear_range=0.1,
-        zoom_range=0.1,
+        rotation_range=40,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        shear_range=0.2,
+        zoom_range=0.2,
         horizontal_flip=True,
         rescale=1/255.0,
         fill_mode='nearest')
 
     train_mask_data_gen_args = dict(
-        rotation_range=10,
-        width_shift_range=0.1,
-        height_shift_range=0.1,
-        shear_range=0.1,
-        zoom_range=0.1,
+        rotation_range=40,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        shear_range=0.2,
+        zoom_range=0.2,
         horizontal_flip=True,
         fill_mode='nearest')
 
@@ -203,34 +215,20 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
 
     print('Generators loaded.')
 
-    # For testing data loading
-    x = train_image_generator.next()
-    y = train_mask_generator.next()
-    print('x shape in generate data', x.shape)  # should = (batch_size, img_hw, img_hw, 3)
-    print('y shape in generate data', y.shape)  # should = (batch_size, dec_hw, dec_hw, 1)
-    plt.figure(1)
-    plt.subplot(221)
-    plt.imshow(x[0, :, :, :])
-    plt.subplot(222)
-    plt.imshow(y[0, :, :, 0])
-    y_post = labels_from_seg_image(y)
-    plt.subplot(223)
-    plt.imshow(y_post[0, :, :, 0])
-    plt.figure(2)
-    plt.subplot(221)
-    plt.imshow(x[1, :, :, :])
-    plt.subplot(222)
-    plt.imshow(y[1, :, :, 0])
-    plt.subplot(223)
-    plt.imshow(y_post[1, :, :, 0])
-    plt.figure(3)
-    plt.subplot(221)
-    plt.imshow(x[2, :, :, :])
-    plt.subplot(222)
-    plt.imshow(y[2, :, :, 0])
-    plt.subplot(223)
-    plt.imshow(y_post[2, :, :, 0])
-    plt.show()
+    # # For testing data loading
+    # x = train_image_generator.next()
+    # y = train_mask_generator.next()
+    # print('x shape in generate data', x.shape)  # should = (batch_size, img_hw, img_hw, 3)
+    # print('y shape in generate data', y.shape)  # should = (batch_size, dec_hw, dec_hw, 1)
+    # plt.figure(1)
+    # plt.subplot(221)
+    # plt.imshow(x[0, :, :, :])
+    # plt.subplot(222)
+    # plt.imshow(y[0, :, :, 0])
+    # # y_post = labels_from_seg_image(y)
+    # # plt.subplot(223)
+    # # plt.imshow(y_post[0, :, :, 0])
+    # plt.show()
 
     autoencoder = build_autoencoder(img_wh, img_dec_wh, num_classes)
     autoencoder.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
@@ -244,7 +242,7 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
         def train_data_gen():
             while True:
                 train_data, train_labels = generate_data(train_image_generator, train_mask_generator,
-                                                               batch_size, num_classes)
+                                                               batch_size, num_classes, dataset)
                 reshaped_train_labels = np.reshape(train_labels,
                                          (batch_size, img_dec_wh * img_dec_wh,
                                           num_classes))
@@ -290,17 +288,17 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
         history = autoencoder.fit_generator(train_data_gen(),
                                             steps_per_epoch=int(num_train_images/batch_size),
                                             nb_epoch=nb_epoch,
-                                            verbose=1)
-                                            # validation_data=val_data_gen(),
-                                            # validation_steps=int(num_val_images)/batch_size)
+                                            verbose=1,
+                                            validation_data=val_data_gen(),
+                                            validation_steps=int(num_val_images)/batch_size)
 
         print("After fitting")
-        if trials % 200 == 0:
-            autoencoder.save('overfit_tests/ppp_test_weight_64_weighted_classes_2008_'
-                             + str(nb_epoch * (trials + 1)).zfill(4) + '.hdf5')
+        # if trials % 200 == 0:
+        #     autoencoder.save('overfit_tests/ppp_test_weight_64_2010_'
+        #                      + str(nb_epoch * (trials + 1)).zfill(4) + '.hdf5')
 
     print("Finished")
 
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-segmentation_train(256, 64, 'ppp')
+segmentation_train(256, 64, 'ppp+up-s31')
