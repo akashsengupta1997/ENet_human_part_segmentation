@@ -43,7 +43,6 @@ def evaluate_pixel_accuracy_CC_loss(model_dir, dataset):
 
     for model_name in sorted(os.listdir(model_dir)):
         if model_name.endswith(".hdf5"):
-            print(model_name)
             img_wh = 256
             if '256' in model_name:
                 img_dec_wh = 256
@@ -82,7 +81,7 @@ def evaluate_pixel_accuracy_CC_loss(model_dir, dataset):
             metrics = model.evaluate_generator(eval_data_gen(),
                                                steps=int(num_val_images/batch_size))
 
-            print(metrics)
+            print('model:', model_name, 'loss:', metrics[0], 'pix acc', metrics[1], '\n')
 
 
 def mean_iou(ground_truth, predict, num_classes):
@@ -172,7 +171,8 @@ def evaluate_IoU(model_dir, dataset):
             print('MODEL IOU', model_name, model_iou)
 
 
-# evaluate_pixel_accuracy_CC_loss('/Users/Akash_Sengupta/Documents/enet/ppp_body_part_models', 'ppp')
+evaluate_pixel_accuracy_CC_loss('/Users/Akash_Sengupta/Documents/enet/ppp_body_part_models', 'ppp')
 
-evaluate_IoU('/Users/Akash_Sengupta/Documents/enet/ppp_body_part_models', 'ppp')
+
+# evaluate_IoU('/Users/Akash_Sengupta/Documents/enet/ppp_body_part_models', 'ppp')
 

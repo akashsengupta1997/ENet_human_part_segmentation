@@ -29,8 +29,8 @@ def test(model, img_wh, img_dec_wh, image_dir, num_classes, save=False):
     for img_num in range(len(img_list)):
         seg_labels = output[img_num, :, :, :]
         seg_img = np.argmax(seg_labels, axis=2)
-        print("labels output shape", seg_labels.shape)
-        print("seg img output shape", seg_img.shape)
+        # print("labels output shape", seg_labels.shape)
+        # print("seg img output shape", seg_img.shape)
         if not save:
             plt.figure(1)
             plt.clf()
@@ -56,17 +56,17 @@ def test(model, img_wh, img_dec_wh, image_dir, num_classes, save=False):
             plt.imshow(img_list[img_num])
             plt.show()
         else:
-            save_path = os.path.join(image_dir, "results", os.path.splitext(fnames[img_num])[0]
+            save_path = os.path.join(image_dir, "results256_ppp", os.path.splitext(fnames[img_num])[0]
                                      + "_seg_img.png")
             plt.imsave(save_path, seg_img*8)
 
 
 def segmentation_test(img_wh, img_dec_wh, num_classes, save=False):
-    test_image_dir = 'test_images'
+    test_image_dir = 'test_videos/my_vid1'
     print('Preloaded model')
-    autoencoder = load_model('./ppp_body_part_models/enet64_weight0401.hdf5')
+    autoencoder = load_model('./ppp_body_part_models/enet256_weight0401.hdf5')
     test(autoencoder, img_wh, img_dec_wh, test_image_dir, num_classes, save=save)
 
-segmentation_test(256, 64, 7, save=False)
+segmentation_test(256, 256, 7, save=True)
 
 

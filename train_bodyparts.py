@@ -132,7 +132,7 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
         val_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/val_images'
         val_label_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/val_masks'
         num_classes = 7
-        num_train_images = 3034
+        num_train_images = 3033
         num_val_images = 500
 
     elif dataset == 'ppp+up-s31':
@@ -142,8 +142,8 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
         val_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/ppp+up-s31/val_images'
         val_label_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/ppp+up-s31/val_masks'
         num_classes = 7
-        num_train_images = 7034
-        num_val_images = 1001
+        num_train_images = 7033
+        num_val_images = 1000
 
     assert os.path.isdir(train_image_dir), 'Invalid image directory'
     assert os.path.isdir(train_label_dir), 'Invalid label directory'

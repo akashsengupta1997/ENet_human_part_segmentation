@@ -9,7 +9,7 @@ from keras.models import load_model
 
 def realtime_demo(img_wh, img_dec_wh, num_classes):
     autoencoder = load_model('/Users/Akash_Sengupta/Documents/enet/ppp_body_part_models/'
-                             'enet64_weight0401.hdf5')
+                             'enet256_weight0401.hdf5')
     cap = cv2.VideoCapture(0)
 
     while True:
@@ -34,7 +34,7 @@ def realtime_demo(img_wh, img_dec_wh, num_classes):
         plt.figure(1)
         plt.imshow(seg_img)
         plt.show(block=False)
-        plt.pause(0.1)
+        plt.pause(0.05)
         plt.clf()
         cv2.imshow('img', display_img)
 
@@ -46,4 +46,4 @@ def realtime_demo(img_wh, img_dec_wh, num_classes):
     cap.release()
     cv2.destroyAllWindows()
 
-realtime_demo(256, 64, 7)
+realtime_demo(256, 256, 7)
