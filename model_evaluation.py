@@ -171,7 +171,7 @@ def evaluate_IoU(model_dir, dataset):
             print('MODEL IOU', model_name, model_iou)
 
 
-evaluate_pixel_accuracy_CC_loss('/Users/Akash_Sengupta/Documents/enet/ppp_body_part_models', 'ppp')
+evaluate_pixel_accuracy_CC_loss('/Users/Akash_Sengupta/Documents/enet/ppp+up-s31_body_part_models', 'ppp')
 
 
 # evaluate_IoU('/Users/Akash_Sengupta/Documents/enet/ppp_body_part_models', 'ppp')

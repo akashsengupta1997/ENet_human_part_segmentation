@@ -56,17 +56,17 @@ def test(model, img_wh, img_dec_wh, image_dir, num_classes, save=False):
             plt.imshow(img_list[img_num])
             plt.show()
         else:
-            save_path = os.path.join(image_dir, "results256_ppp", os.path.splitext(fnames[img_num])[0]
+            save_path = os.path.join(image_dir, "results256_pppups31", os.path.splitext(fnames[img_num])[0]
                                      + "_seg_img.png")
             plt.imsave(save_path, seg_img*8)
 
 
 def segmentation_test(img_wh, img_dec_wh, num_classes, save=False):
-    test_image_dir = 'test_videos/my_vid1'
+    test_image_dir = 'test_images'
     print('Preloaded model')
-    autoencoder = load_model('./ppp_body_part_models/enet256_weight0401.hdf5')
-    test(autoencoder, img_wh, img_dec_wh, test_image_dir, num_classes, save=save)
+    model = load_model('./ppp+up-s31_body_part_models/enet256_weight0501.hdf5')
+    test(model, img_wh, img_dec_wh, test_image_dir, num_classes, save=save)
 
-segmentation_test(256, 256, 7, save=True)
+segmentation_test(256, 256, 7, save=False)
 
 
