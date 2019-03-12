@@ -268,7 +268,7 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
                                             nb_epoch=nb_epoch,
                                             verbose=1,
                                             validation_data=val_data_gen(),
-                                            validation_steps=int(num_val_images)/batch_size)
+                                            validation_steps=int(num_val_images/batch_size))
 
         print("After fitting")
         if trials % 200 == 0:
