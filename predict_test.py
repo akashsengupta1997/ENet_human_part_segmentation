@@ -5,6 +5,8 @@ import numpy as np
 import cv2
 
 from keras.models import load_model
+from focal_loss import categorical_focal_loss
+
 
 
 def test(model, img_wh, img_dec_wh, image_dir, num_classes, save=False):
@@ -56,17 +58,20 @@ def test(model, img_wh, img_dec_wh, image_dir, num_classes, save=False):
             plt.imshow(img_list[img_num])
             plt.show()
         else:
-            save_path = os.path.join(image_dir, "results256_pppups31", os.path.splitext(fnames[img_num])[0]
+            save_path = os.path.join(image_dir, "results64_pppups31", os.path.splitext(fnames[img_num])[0]
                                      + "_seg_img.png")
             plt.imsave(save_path, seg_img*8)
 
 
 def segmentation_test(img_wh, img_dec_wh, num_classes, save=False):
-    test_image_dir = 'test_images'
+    # test_image_dir = 'test_images'
+    test_image_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/up-s31/trial/images/train"
     print('Preloaded model')
-    model = load_model('./ppp+up-s31_body_part_models/enet256_weight0501.hdf5')
+    # model = load_model('./ppp+up-s31_body_part_models/enet64_weight1301.hdf5')
+    model = load_model('./overfit_tests/up-s31_test_weight_640401.hdf5',
+                       custom_objects={'categorical_focal_loss_fixed': categorical_focal_loss(gamma=2.0)})
     test(model, img_wh, img_dec_wh, test_image_dir, num_classes, save=save)
 
-segmentation_test(256, 256, 7, save=False)
+segmentation_test(256, 64, 32, save=False)
 
 

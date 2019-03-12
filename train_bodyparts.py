@@ -91,13 +91,11 @@ def generate_data(image_generator, mask_generator, n, num_classes, dataset):
             i = i + 1
             if i >= n:
                 break
-    #
-    # print('images shape in generate data', np.array(images).shape,
-    #       'labels shape in generate data', np.array(labels).shape)
+
     return np.array(images), np.array(labels)
 
 
-def build_autoencoder(img_wh, img_dec_wh, num_classes):
+def build_enet_model(img_wh, img_dec_wh, num_classes):
     inp = Input(shape=(img_wh, img_wh, 3))
 
     if img_dec_wh == 256:
@@ -110,20 +108,22 @@ def build_autoencoder(img_wh, img_dec_wh, num_classes):
     enet = Reshape((img_dec_wh * img_dec_wh, num_classes))(enet)
     enet = Activation('softmax')(
         enet)  # softmax is computed for the last dimension - i.e. over classes, as desired
-    autoencoder = Model(inputs=inp, outputs=enet)
+    enet_model = Model(inputs=inp, outputs=enet)
 
-    return autoencoder
+    return enet_model
 
 
 def segmentation_train(img_wh, img_dec_wh, dataset):
     batch_size = 1  # TODO change back to 10
 
     if dataset == 'up-s31':
-        train_image_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/up-s31/s31/images"
-        train_label_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/up-s31/s31/masks"
-        # TODO create validation directory
+        train_image_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/up-s31/s31_padded/images"
+        train_label_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/up-s31/s31_padded/masks"
+        val_image_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/up-s31/s31_padded/val_images"
+        val_label_dir = "/Users/Akash_Sengupta/Documents/4th_year_project_datasets/up-s31/s31_padded/val_masks"
         num_classes = 32
-        num_train_images = 8515
+        num_train_images = 7664
+        num_val_images = 851
 
     elif dataset == 'ppp':
         train_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/train_images'
@@ -215,23 +215,23 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
 
     print('Generators loaded.')
 
-    # # For testing data loading
-    # x = train_image_generator.next()
-    # y = train_mask_generator.next()
-    # print('x shape in generate data', x.shape)  # should = (batch_size, img_hw, img_hw, 3)
-    # print('y shape in generate data', y.shape)  # should = (batch_size, dec_hw, dec_hw, 1)
-    # plt.figure(1)
-    # plt.subplot(221)
-    # plt.imshow(x[0, :, :, :])
-    # plt.subplot(222)
-    # plt.imshow(y[0, :, :, 0])
-    # # y_post = labels_from_seg_image(y)
-    # # plt.subplot(223)
-    # # plt.imshow(y_post[0, :, :, 0])
-    # plt.show()
+    # For testing data loading
+    x = train_image_generator.next()
+    y = train_mask_generator.next()
+    print('x shape in generate data', x.shape)  # should = (batch_size, img_hw, img_hw, 3)
+    print('y shape in generate data', y.shape)  # should = (batch_size, dec_hw, dec_hw, 1)
+    plt.figure(1)
+    plt.subplot(221)
+    plt.imshow(x[0, :, :, :])
+    plt.subplot(222)
+    plt.imshow(y[0, :, :, 0])
+    # y_post = labels_from_seg_image(y)
+    # plt.subplot(223)
+    # plt.imshow(y_post[0, :, :, 0])
+    plt.show()
 
-    autoencoder = build_autoencoder(img_wh, img_dec_wh, num_classes)
-    autoencoder.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
+    enet_model = build_enet_model(img_wh, img_dec_wh, num_classes)
+    enet_model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
 
     print("Model compiled.")
 
@@ -241,51 +241,29 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
 
         def train_data_gen():
             while True:
-                train_data, train_labels = generate_data(train_image_generator, train_mask_generator,
-                                                               batch_size, num_classes, dataset)
+                train_data, train_labels = generate_data(train_image_generator,
+                                                         train_mask_generator,
+                                                         batch_size,
+                                                         num_classes,
+                                                         dataset)
                 reshaped_train_labels = np.reshape(train_labels,
-                                         (batch_size, img_dec_wh * img_dec_wh,
-                                          num_classes))
-                # # Testing images plot
-                # plt.figure(1)
-                # plt.clf()
-                # plt.imshow((train_data[0,:,:,:]*255).astype(np.uint8))
-                # #
-                # # Testing labels plot
-                # plt.figure(2)
-                # plt.clf()
-                # plt.subplot(331)
-                # plt.imshow((train_labels[0, :, :, 0]*255), cmap="gray")
-                # plt.subplot(332)
-                # plt.imshow((train_labels[0, :, :, 1] * 255), cmap="gray")
-                # plt.subplot(333)
-                # plt.imshow((train_labels[0, :, :, 2] * 255), cmap="gray")
-                # plt.subplot(334)
-                # plt.imshow((train_labels[0, :, :, 3] * 255), cmap="gray")
-                # plt.subplot(335)
-                # plt.imshow((train_labels[0, :, :, 4] * 255), cmap="gray")
-                # plt.subplot(336)
-                # plt.imshow((train_labels[0, :, :, 5] * 255), cmap="gray")
-                # plt.subplot(337)
-                # plt.imshow((train_labels[0, :, :, 6] * 255), cmap="gray")
-                #
-                # plt.figure(3)
-                # seg_img = np.argmax(train_labels[0], axis=2)
-                # plt.imshow(seg_img, cmap='gray')
-                # plt.show()
+                                                   (batch_size, img_dec_wh * img_dec_wh,
+                                                    num_classes))
+
                 yield (train_data, reshaped_train_labels)
 
         def val_data_gen():
             while True:
                 val_data, val_labels = generate_data(val_image_generator,
-                                                         val_mask_generator,
-                                                         batch_size, num_classes)
+                                                     val_mask_generator,
+                                                     batch_size,
+                                                     num_classes)
                 reshaped_val_labels = np.reshape(val_labels,
                                                    (batch_size, img_dec_wh * img_dec_wh,
                                                     num_classes))
                 yield (val_data, reshaped_val_labels)
 
-        history = autoencoder.fit_generator(train_data_gen(),
+        history = enet_model.fit_generator(train_data_gen(),
                                             steps_per_epoch=int(num_train_images/batch_size),
                                             nb_epoch=nb_epoch,
                                             verbose=1,
@@ -293,13 +271,41 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
                                             validation_steps=int(num_val_images)/batch_size)
 
         print("After fitting")
-        # if trials % 200 == 0:
-        #     autoencoder.save('overfit_tests/ppp_test_weight_64_2010_'
-        #                      + str(nb_epoch * (trials + 1)).zfill(4) + '.hdf5')
+        if trials % 200 == 0:
+
+            # Monitor training
+            img_list = []
+            fnames = []
+            monitor_images_dir = "./monitor_train/monitor_train_images"
+
+            for fname in sorted(os.listdir(monitor_images_dir)):
+                if fname.endswith(".png"):
+                    image = cv2.imread(os.path.join(monitor_images_dir, fname))
+                    image = cv2.resize(image, (img_wh, img_wh))
+                    image = image[..., ::-1]
+                    img_list.append(image / 255.0)
+                    fnames.append(os.path.splitext(fname)[0])
+
+            img_tensor = np.array(img_list)
+            output = np.reshape(enet_model.predict(img_tensor),
+                                (-1, img_dec_wh, img_dec_wh,
+                                 num_classes))
+
+            for img_num in range(len(img_list)):
+                seg_labels = output[img_num, :, :, :]
+                seg_img = np.argmax(seg_labels, axis=-1)
+                plt.figure(1)
+                plt.clf()
+                plt.imshow(seg_img)
+                plt.savefig("./monitor_train/seg_" + str(trials) + "_" + fnames[img_num] +
+                            "_seg_image.png")
+
+            # Save model
+            enet_model.save('up-s31_body_part_models/enet256_' + str(trials + 1).zfill(4)
+                            + '.hdf5')
 
     print("Finished")
 
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-if __name__ == 'main':
-    segmentation_train(256, 64, 'ppp+up-s31')
+segmentation_train(256, 256, 'up-s31')

@@ -2,8 +2,11 @@
 *.png
 *.xml
 *.idea
-
+*.xml
+*.iml
+*.DS_Store
 __pycache__/
+*.pyc
 
 overfit_tests/
 images-ex04/
