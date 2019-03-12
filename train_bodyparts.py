@@ -257,7 +257,8 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
                 val_data, val_labels = generate_data(val_image_generator,
                                                      val_mask_generator,
                                                      batch_size,
-                                                     num_classes)
+                                                     num_classes,
+                                                     dataset)
                 reshaped_val_labels = np.reshape(val_labels,
                                                    (batch_size, img_dec_wh * img_dec_wh,
                                                     num_classes))
