@@ -56,14 +56,16 @@ def predict(test_image_dir, model_path, input_wh, output_wh, num_classes, save=F
             pred_times.append(time.time() - start)
             seg = np.reshape(seg, (1, output_wh, output_wh, num_classes))
             seg_img = np.argmax(seg[0], axis=-1)
+            plt.imshow(seg_img)
+            plt.show()
 
             if save:
                 save_path = os.path.join(test_image_dir, "enet_segs", fname)
-                plt.imsave(save_path, seg_img*8)
+                cv2.imwrite(save_path, seg_img)
 
 
 
-predict("/data/cvfs/as2562/indirect_learning_shape-pose/my_singleperson_vids/my_vid2/",
+predict("./my_vid2/",
         "./up-s31_body_part_models/enet256_small_glob_rot_no_horiz_flip0401.hdf5",
         256,
         256,
