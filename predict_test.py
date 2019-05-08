@@ -40,13 +40,13 @@ def load_input_img(image_dir, fname, input_wh, pad=False):
     return input_img
 
 
-def predict(test_image_dir, model_path, input_wh, output_wh, image_dir, num_classes, save=False,
+def predict(test_image_dir, model_path, input_wh, output_wh, num_classes, save=False,
             pad=True):
 
     seg_model = load_model(model_path)
 
     pred_times = []
-    for fname in sorted(os.listdir(image_dir)):
+    for fname in sorted(os.listdir(test_image_dir)):
         if fname.endswith(".png") or fname.endswith(".jpg"):
             print(fname)
             input_img = load_input_img(test_image_dir, fname, input_wh, pad=pad)
@@ -54,7 +54,8 @@ def predict(test_image_dir, model_path, input_wh, output_wh, image_dir, num_clas
             start = time.time()
             seg = seg_model.predict(input_img)
             pred_times.append(time.time() - start)
-            seg_img = np.reshape(seg, (1, output_wh, output_wh, num_classes))
+            seg = np.reshape(seg, (1, output_wh, output_wh, num_classes))
+            seg_img = np.argmax(seg[0], axis=-1)
 
             if save:
                 save_path = os.path.join(test_image_dir, "enet_segs", fname)
