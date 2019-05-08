@@ -124,6 +124,8 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
         num_classes = 32
         num_train_images = 7664
         num_val_images = 851
+        # num_train_images = 5932
+        # num_val_images = 665
 
     elif dataset == 'ppp':
         train_image_dir = '/Users/Akash_Sengupta/Documents/4th_year_project_datasets/VOC2010/pascal_person_part/train_images'
@@ -272,7 +274,7 @@ def segmentation_train(img_wh, img_dec_wh, dataset):
                                             validation_steps=int(num_val_images/batch_size))
 
         print("After fitting")
-        if trials % 200 == 0:
+        if trials % 100 == 0:
 
             # Monitor training
             img_list = []
